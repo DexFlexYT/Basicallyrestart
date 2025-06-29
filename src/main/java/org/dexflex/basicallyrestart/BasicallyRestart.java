@@ -3,12 +3,12 @@ package org.dexflex.basicallyrestart;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -24,7 +24,7 @@ public class BasicallyRestart implements ModInitializer {
 	public void onInitialize() {
 		loadConfig();
 
-		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			dispatcher.register(CommandManager.literal("restart")
 					.requires(source -> source.hasPermissionLevel(4))
 					.executes(context -> {
@@ -37,11 +37,12 @@ public class BasicallyRestart implements ModInitializer {
 						Path scriptPath = runDir.resolve(scriptName);
 
 						if (!Files.exists(scriptPath)) {
-							source.sendError(Text.literal("Restart script not found: " + scriptPath));
+							source.sendError(new LiteralText("Restart script not found: " + scriptPath));
 							return 0;
 						}
 
-						source.sendFeedback(Text.literal("Server restarting..."), true);
+						source.sendFeedback(new LiteralText("Server restarting..."), true);
+
 
 						String command = os.contains("win")
 								? "cmd /c start \"\" \"" + scriptPath + "\""
