@@ -29,7 +29,7 @@ public class BasicallyRestart implements ModInitializer {
 					.requires(source -> source.hasPermissionLevel(4))
 					.executes(context -> {
 						ServerCommandSource source = context.getSource();
-						MinecraftServer server = source.getServer();
+						MinecraftServer server = source.getMinecraftServer();
 
 						Path runDir = FabricLoader.getInstance().getGameDir().toAbsolutePath();
 						String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
