@@ -18,8 +18,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 
 public class BasicallyRestart implements ModInitializer {
-	public static final String MOD_ID = "basicallyrestart";
-	private static BasicallyRestartConfig config;
+	private static Config config;
 
 	@Override
 	public void onInitialize() {
@@ -42,22 +41,33 @@ public class BasicallyRestart implements ModInitializer {
 							return 0;
 						}
 
+						source.sendFeedback(() -> Text.literal("Server restarting..."), true);
+
 						String command = os.contains("win")
 								? "cmd /c start \"\" \"" + scriptPath + "\""
-								: "bash \"" + scriptPath + "\"";
+								: String.format("nohup bash \"%s\" >/dev/null 2>&1 &", scriptPath);
 
-						Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+						if (config.saveBeforeRestart) {
+							Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+								try {
+									Runtime.getRuntime().exec(command, null, runDir.toFile());
+									System.out.println("Executed restart script (delayed).");
+								} catch (IOException e) {
+									System.err.println("Failed to run restart script: " + e.getMessage());
+								}
+							}));
+							server.save(true, true, true);
+							server.stop(false);
+						} else {
 							try {
 								Runtime.getRuntime().exec(command, null, runDir.toFile());
-								System.out.println("Executed restart script.");
+								System.out.println("Executed restart script (immediate).");
 							} catch (IOException e) {
 								System.err.println("Failed to run restart script: " + e.getMessage());
 							}
-						}));
+							Runtime.getRuntime().halt(0);
+						}
 
-						source.sendFeedback(Text.literal("Server restarting..."), true);
-						if (config.saveBeforeRestart) server.save(true, true, true);
-						server.stop(false);
 						return 1;
 					}));
 		});
@@ -71,18 +81,18 @@ public class BasicallyRestart implements ModInitializer {
 		try {
 			Files.createDirectories(configDir);
 			if (Files.notExists(configFile)) {
-				config = new BasicallyRestartConfig();
+				config = new Config();
 				try (Writer writer = Files.newBufferedWriter(configFile)) {
 					gson.toJson(config, writer);
 				}
 			} else {
 				try (Reader reader = Files.newBufferedReader(configFile)) {
-					config = gson.fromJson(reader, BasicallyRestartConfig.class);
+					config = gson.fromJson(reader, Config.class);
 				}
 			}
 		} catch (IOException e) {
 			System.err.println("[BasicallyRestart] Failed to load config: " + e.getMessage());
-			config = new BasicallyRestartConfig();
+			config = new Config();
 		}
 	}
 }
