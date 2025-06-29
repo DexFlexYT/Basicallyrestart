@@ -41,7 +41,7 @@ public class BasicallyRestart implements ModInitializer {
 							return 0;
 						}
 
-						source.sendFeedback(() -> Text.literal("Server restarting..."), true);
+						source.sendFeedback(Text.literal("Server restarting..."), true);
 
 						String command = os.contains("win")
 								? "cmd /c start \"\" \"" + scriptPath + "\""
